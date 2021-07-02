@@ -1,6 +1,5 @@
 package top.misec;
 
-
 import cn.hutool.http.Header;
 import cn.hutool.http.HttpRequest;
 import cn.hutool.http.HttpStatus;
@@ -14,6 +13,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import top.misec.utils.loadFile;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -32,44 +32,52 @@ public class ScheduleTask {
         String json = loadFile.loadConfigJsonFromFile("config.json");
         JSONObject jsonObject = JSON.parseObject(json);
         JSONArray fundList = jsonObject.getJSONArray("fundList");
-        List<Integer> arrayList = fundList.toJavaList(Integer.class);
-
-        for (Integer integer : arrayList) {
+        List<String> arrayList = fundList.toJavaList(String.class);
+        int count = 0;
+        for (String code : arrayList) {
             long timestamp = System.currentTimeMillis();
-            String fundCode = integer.toString();
             String url = "https://fundgz.1234567.com.cn/js/";
-            String param = fundCode + ".js?rt=" + timestamp;
+            String param = code + ".js?rt=" + timestamp;
             String result = HttpUtil.get(url + param).replace("jsonpgz(", "").replace(");", "");
             JSONObject jsonResult = JSON.parseObject(result);
             log.info(jsonResult);
-            hashMap.put(jsonResult.getString("name"), jsonResult.getString("gszzl"));
+            count++;
+            hashMap.put(count + " : " + jsonResult.getString("name"), jsonResult.getString("gszzl"));
+            /*
+             * 满4个推送一次
+             */
+            if (count % 4 == 0) {
+                sendMsg(hashMap, jsonObject);
+                hashMap.clear();
+            }
         }
+        sendMsg(hashMap, jsonObject);
         log.info(hashMap);
 
-        sendMsg(hashMap);
 
     }
 
-    public static void sendMsg(HashMap<String, String> hashMap) {
+    public static void sendMsg(HashMap<String, String> hashMap, JSONObject jsonObject) {
 
-        String json = loadFile.loadConfigJsonFromFile("pushconfig.json");
-        JSONObject jsonObject = JSON.parseObject(json);
-
+        //获取推送服务器地址
         String pushUrl = jsonObject.getString("server");
 
+        //获取推送设备列表
         JSONArray pushArray = jsonObject.getJSONArray("key");
-
-        List<String> list = JSON.parseArray(pushArray.toString(), String.class);
-
+        List<String> pushList = JSON.parseArray(pushArray.toString(), String.class);
+        //推送内容
         StringBuilder pushContent = new StringBuilder();
+
+        //对map进行排序，不知道为啥拍出来的序号还是无序的。
+        List<Map.Entry<String, String>> lstEntry = new ArrayList<>(hashMap.entrySet());
+        lstEntry.sort((Map.Entry.comparingByKey()));
 
         for (Map.Entry<String, String> entry : (hashMap).entrySet()) {
             String key = entry.getKey();
             String value = entry.getValue();
             pushContent.append(key).append(" ：").append(value).append("%\n");
         }
-        for (String deviceKey : list) {
-
+        for (String deviceKey : pushList) {
 
             JSONObject postBody = new JSONObject();
             postBody.put("device_key", deviceKey);
@@ -87,7 +95,6 @@ public class ScheduleTask {
                 log.info("推送成功");
             }
         }
-
     }
 
     public static void main(String[] args) {
