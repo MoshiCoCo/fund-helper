@@ -1,4 +1,4 @@
 {
   "server": "https://bark.misec.top/push",
-  "key": "自己的barkpushkey"
+  "key":["key1","key2"]
 }
