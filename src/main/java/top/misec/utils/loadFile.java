@@ -4,11 +4,12 @@ import lombok.extern.log4j.Log4j2;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
+
 /**
  * @author junzhou
  */
 @Log4j2
-public  class loadFile {
+public class loadFile {
     /**
      * 从外部资源读取配置文件
      *
@@ -25,11 +26,13 @@ public  class loadFile {
             is.close();
             config = new String(buffer, StandardCharsets.UTF_8);
         } catch (FileNotFoundException e) {
-            log.info("没有找到{}配置文件，请将其放置到jar包所在目录",fileName);
+            log.info("没有找到{}配置文件，请将其放置到jar包所在目录", fileName);
             e.printStackTrace();
         } catch (IOException e) {
             e.printStackTrace();
             log.debug("", e);
+        } finally {
+            log.info("读取{}文件成功", fileName);
         }
         return config;
     }

@@ -21,6 +21,7 @@ import java.util.Map;
 /**
  * @author junzhou
  */
+
 @Log4j2
 @Component
 @EnableScheduling
@@ -55,7 +56,10 @@ public class ScheduleTask {
         JSONObject jsonObject = JSON.parseObject(json);
 
         String pushUrl = jsonObject.getString("server");
-        String deviceKey=jsonObject.getString("key");
+
+        JSONArray pushArray = jsonObject.getJSONArray("key");
+
+        List<String> list = JSON.parseArray(pushArray.toString(), String.class);
 
         StringBuilder pushContent = new StringBuilder();
 
@@ -64,24 +68,26 @@ public class ScheduleTask {
             String value = entry.getValue();
             pushContent.append(key).append(" ：").append(value).append("%\n");
         }
-
-        JSONObject postBody = new JSONObject();
-        postBody.put("device_key", deviceKey);
-        postBody.put("title", "基金涨跌提醒");
-        postBody.put("body", pushContent.toString());
+        for (String deviceKey : list) {
 
 
-        String res = HttpRequest.post(pushUrl)
-                .header(Header.CONTENT_TYPE, "application/json; charset=utf-8")
-                .body(postBody.toString())
-                .execute()
-                .body();
+            JSONObject postBody = new JSONObject();
+            postBody.put("device_key", deviceKey);
+            postBody.put("title", "基金涨跌提醒");
+            postBody.put("body", pushContent.toString());
+            String res = HttpRequest.post(pushUrl)
+                    .header(Header.CONTENT_TYPE, "application/json; charset=utf-8")
+                    .body(postBody.toString())
+                    .execute()
+                    .body();
 
-        JSONObject result = JSON.parseObject(res);
+            JSONObject result = JSON.parseObject(res);
 
-        if (result.getInteger("code") == HttpStatus.HTTP_OK) {
-            log.info("推送成功");
+            if (result.getInteger("code") == HttpStatus.HTTP_OK) {
+                log.info("推送成功");
+            }
         }
+
     }
 
     public static void main(String[] args) {
