@@ -24,8 +24,7 @@ import java.util.Map;
 @Log4j2
 @Component
 @EnableScheduling
-public class statcScheduleTsak {
-
+public class ScheduleTask {
     @Scheduled(cron = "0 40,10 10,14 * * 1,2,3,4,5")
     public static void getFundValueInfo() {
         HashMap<String, String> hashMap = new HashMap<>(16);
@@ -34,17 +33,12 @@ public class statcScheduleTsak {
         JSONArray fundList = jsonObject.getJSONArray("fundList");
         List<Integer> arrayList = fundList.toJavaList(Integer.class);
 
-        log.info(arrayList);
-
         for (Integer integer : arrayList) {
             long timestamp = System.currentTimeMillis();
             String fundCode = integer.toString();
-            //https://fundgz.1234567.com.cn/js/005669.js?rt=1625196726558
             String url = "https://fundgz.1234567.com.cn/js/";
             String param = fundCode + ".js?rt=" + timestamp;
-
-            String result = HttpUtil.get(url + param);
-            result = result.replace("jsonpgz(", "").replace(");", "");
+            String result = HttpUtil.get(url + param).replace("jsonpgz(", "").replace(");", "");
             JSONObject jsonResult = JSON.parseObject(result);
             log.info(jsonResult);
             hashMap.put(jsonResult.getString("name"), jsonResult.getString("gszzl"));
@@ -65,7 +59,6 @@ public class statcScheduleTsak {
 
         StringBuilder pushContent = new StringBuilder();
 
-
         for (Map.Entry<String, String> entry : (hashMap).entrySet()) {
             String key = entry.getKey();
             String value = entry.getValue();
@@ -85,10 +78,10 @@ public class statcScheduleTsak {
                 .body();
 
         JSONObject result = JSON.parseObject(res);
+
         if (result.getInteger("code") == HttpStatus.HTTP_OK) {
             log.info("推送成功");
         }
-
     }
 
     public static void main(String[] args) {

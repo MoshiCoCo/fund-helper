@@ -7,10 +7,9 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
  * @author junzhou
  */
 @SpringBootApplication
-public class FoundSpringApplication {
-
+public class FundSpringApplication {
     public static void main(String[] args) {
-        SpringApplication.run(FoundSpringApplication.class, args);
+        SpringApplication.run(FundSpringApplication.class, args);
     }
 
 }
