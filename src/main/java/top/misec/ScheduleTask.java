@@ -13,10 +13,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import top.misec.utils.loadFile;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * @author junzhou
@@ -26,9 +23,13 @@ import java.util.Map;
 @Component
 @EnableScheduling
 public class ScheduleTask {
+
+    private final static int BATCH_SIZE = 4;
+
     @Scheduled(cron = "0 40,10 10,14 * * 1,2,3,4,5")
     public static void getFundValueInfo() {
-        HashMap<String, String> hashMap = new HashMap<>(16);
+        List<String> pushContentList = new ArrayList<>();
+        LinkedList<List<String>> pushContentBatchList = new LinkedList<>();
         String json = loadFile.loadConfigJsonFromFile("config.json");
         JSONObject jsonObject = JSON.parseObject(json);
         JSONArray fundList = jsonObject.getJSONArray("fundList");
@@ -41,23 +42,23 @@ public class ScheduleTask {
             String result = HttpUtil.get(url + param).replace("jsonpgz(", "").replace(");", "");
             JSONObject jsonResult = JSON.parseObject(result);
             log.info(jsonResult);
-            count++;
-            hashMap.put(count + " : " + jsonResult.getString("name"), jsonResult.getString("gszzl"));
-            /*
-             * 满4个推送一次
-             */
-            if (count % 4 == 0) {
-                sendMsg(hashMap, jsonObject);
-                hashMap.clear();
+            pushContentList.add(String.format("%s. %s ：%s%%\n", ++count, jsonResult.getString("name"), jsonResult.getString("gszzl")));
+            // 手机上消息推送，先到的会展示在下方，后到的展示在上方，为了保持顺序，故而需要倒序推送
+            if (count % BATCH_SIZE == 0) {
+                pushContentBatchList.addFirst(pushContentList);
+                pushContentList = new ArrayList<>();
             }
         }
-        sendMsg(hashMap, jsonObject);
-        log.info(hashMap);
-
+        if (!pushContentList.isEmpty()) {
+            pushContentBatchList.addFirst(pushContentList);
+        }
+        for (List<String> contentList : pushContentBatchList) {
+            sendMsg(contentList, jsonObject);
+        }
 
     }
 
-    public static void sendMsg(HashMap<String, String> hashMap, JSONObject jsonObject) {
+    public static void sendMsg(List<String> pushContentList, JSONObject jsonObject) {
 
         //获取推送服务器地址
         String pushUrl = jsonObject.getString("server");
@@ -68,17 +69,9 @@ public class ScheduleTask {
         //推送内容
         StringBuilder pushContent = new StringBuilder();
 
-        //对map进行排序，不知道为啥拍出来的序号还是无序的。
-        List<Map.Entry<String, String>> lstEntry = new ArrayList<>(hashMap.entrySet());
-        lstEntry.sort((Map.Entry.comparingByKey()));
+        pushContentList.forEach(pushContent::append);
 
-        for (Map.Entry<String, String> entry : (hashMap).entrySet()) {
-            String key = entry.getKey();
-            String value = entry.getValue();
-            pushContent.append(key).append(" ：").append(value).append("%\n");
-        }
         for (String deviceKey : pushList) {
-
             JSONObject postBody = new JSONObject();
             postBody.put("device_key", deviceKey);
             postBody.put("title", "基金涨跌提醒");
