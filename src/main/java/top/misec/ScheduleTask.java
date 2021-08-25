@@ -26,7 +26,7 @@ public class ScheduleTask {
 
     private final static int BATCH_SIZE = 4;
 
-    @Scheduled(cron = "0 40,10 10,14 * * 1,2,3,4,5")
+    @Scheduled(cron = "0 40 11,14 * * 1,2,3,4,5")
     public static void getFundValueInfo() {
         List<String> pushContentList = new ArrayList<>();
         LinkedList<List<String>> pushContentBatchList = new LinkedList<>();
@@ -70,7 +70,6 @@ public class ScheduleTask {
         StringBuilder pushContent = new StringBuilder();
 
         pushContentList.forEach(pushContent::append);
-
         for (String deviceKey : pushList) {
             JSONObject postBody = new JSONObject();
             postBody.put("device_key", deviceKey);
