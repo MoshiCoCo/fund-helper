@@ -1,13 +1,14 @@
 package top.misec.utils;
 
 
-import com.auth0.jwt.JWTSigner;
-import com.auth0.jwt.JWTVerifier;
-import lombok.Synchronized;
-import lombok.extern.log4j.Log4j2;
-
 import java.util.HashMap;
 import java.util.Map;
+
+import com.auth0.jwt.JWTSigner;
+import com.auth0.jwt.JWTVerifier;
+
+import lombok.Synchronized;
+import lombok.extern.log4j.Log4j2;
 
 /**
  * @author junzhou

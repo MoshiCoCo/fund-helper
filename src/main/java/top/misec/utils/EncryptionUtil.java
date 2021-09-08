@@ -1,11 +1,10 @@
 package top.misec.utils;
 
-import com.auth0.jwt.internal.org.apache.commons.lang3.StringUtils;
-import org.apache.commons.codec.digest.DigestUtils;
-
-import javax.swing.tree.TreeNode;
-import java.util.List;
 import java.util.UUID;
+
+import com.auth0.jwt.internal.org.apache.commons.lang3.StringUtils;
+
+import org.apache.commons.codec.digest.DigestUtils;
 
 /**
  * @author JunzhouLiu

@@ -13,11 +13,11 @@ import top.misec.service.GetPasswordService;
 @RequestMapping("/utils")
 public class PwdController {
 
-	@Autowired
-	private GetPasswordService getPasswordService;
+    @Autowired
+    private GetPasswordService getPasswordService;
 
-	@GetMapping(value = "/getPassword")
-	public Result getPwd(@RequestParam(value = "length", required = false) Integer length) {
-		return getPasswordService.getDefaultPassword(length);
-	}
+    @GetMapping(value = "/getPassword")
+    public Result getPwd(@RequestParam(value = "length", required = false) Integer length) {
+        return getPasswordService.getDefaultPassword(length);
+    }
 }
